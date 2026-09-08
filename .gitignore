@@ -1,0 +1,3 @@
+*.TMP
+Firmware/MDK-ARM/DebugConfig/
+Firmware/MDK-ARM/RadioPrj/
