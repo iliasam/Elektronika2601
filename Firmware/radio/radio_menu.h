@@ -5,6 +5,8 @@
 #include "stm32f3xx.h"
 #include "config.h"
 
+void radio_menu_handling(void);
+
 void radio_menu_tune_pressed(uint8_t index);
 
 void radio_menu_memory_hold(uint8_t index);

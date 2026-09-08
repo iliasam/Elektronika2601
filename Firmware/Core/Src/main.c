@@ -128,6 +128,7 @@ int main(void)
     power_ctrl_update();
     key_handling();
     radio_ctrl_handling();
+    radio_menu_handling();
     LL_mDelay(100);
   }
   /* USER CODE END 3 */

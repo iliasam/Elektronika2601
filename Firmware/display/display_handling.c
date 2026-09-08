@@ -40,8 +40,11 @@ void display_show_message(char *text, char *text_yes, char *text_no)
     
     lcd_draw_utf8_string(text, 7, 7, FONT_SIZE_8, 0);
     
-    lcd_draw_utf8_string(text_yes, 53, 21, FONT_SIZE_6, LCD_CENTER_X_FLAG);
-    lcd_draw_utf8_string(text_no, 110, 21, FONT_SIZE_6, LCD_CENTER_X_FLAG);
+    if (text_yes != NULL)
+        lcd_draw_utf8_string(text_yes, 53, 21, FONT_SIZE_6, LCD_CENTER_X_FLAG);
+
+    if (text_no!= NULL)
+        lcd_draw_utf8_string(text_no, 110, 21, FONT_SIZE_6, LCD_CENTER_X_FLAG);
     
     lcd_update();
 }

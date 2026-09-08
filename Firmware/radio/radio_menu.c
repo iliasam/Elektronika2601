@@ -8,6 +8,9 @@
 #define TUNE_DOWN_KEY_IDX   7
 #define TUNE_UP_KEY_IDX     8
 
+#define SAVE_TO_MEM_MSG_TIMEOUT_MS      4000
+#define READ_MEM_MSG_TIMEOUT_MS         800
+
 typedef enum
 {
     RADIO_MENU_MAIN = 0,
@@ -19,6 +22,9 @@ typedef struct
 {
     void (*yes_callback)(void);
     void (*no_callback)(void);
+    
+    //0 - no timeout
+    uint32_t timeout_timer_ms;
 } radio_menu_msg_t;
 
 radio_menu_msg_t radio_menu_msg_obj = {0};
@@ -32,27 +38,26 @@ uint8_t radio_menu_mem_saving_index = 0;
 void radio_menu_activate_message(void);
 void radio_menu_close_message(void);
 void radio_menu_save_memory_yes(void);
+void radio_menu_display_warning(uint8_t index);
 
 //*****************************************
 
-/// Called from keys event callback
-void radio_menu_tune_pressed(uint8_t index)
+
+void radio_menu_handling(void)
 {
-    if (index == TUNE_DOWN_KEY_IDX)
-        radio_tune_step_down();
-    else if (index == TUNE_UP_KEY_IDX)
-        radio_tune_step_up();
+    if (radio_menu_mode == RADIO_MENU_MESSAGE)
+    {
+        //Leaving message mode
+        if (radio_menu_msg_obj.timeout_timer_ms != 0)
+        {
+            if (TIMER_ELAPSED(radio_menu_msg_obj.timeout_timer_ms))
+            {
+                radio_menu_close_message();
+            }
+        }
+    }
 }
 
-void radio_menu_memory_presed(uint8_t index)
-{
-    uint32_t new_freq_hz = nvram_read_key_memory_freq(index + 1);
-    if (new_freq_hz == 0)
-    {
-        return;
-    }
-    radio_set_new_frequency(new_freq_hz);
-}
 
 /// Called from keys event callback
 void radio_menu_memory_hold(uint8_t index)
@@ -64,6 +69,7 @@ void radio_menu_memory_hold(uint8_t index)
     
     radio_menu_msg_obj.yes_callback = radio_menu_save_memory_yes;
     radio_menu_msg_obj.no_callback = NULL;
+    START_TIMER(radio_menu_msg_obj.timeout_timer_ms, SAVE_TO_MEM_MSG_TIMEOUT_MS);
     
     display_show_message(tmp_str, "YES", "NO");
     radio_menu_activate_message();
@@ -84,9 +90,48 @@ void radio_menu_close_message(void)
 {
     radio_menu_mode = RADIO_MENU_MAIN;
     display_close_message();
+    radio_menu_msg_obj.timeout_timer_ms = 0;
 }
 
 //**********************************************************
+
+/// Called from keys event callback
+void radio_menu_tune_pressed(uint8_t index)
+{
+    if (index == TUNE_DOWN_KEY_IDX)
+        radio_tune_step_down();
+    else if (index == TUNE_UP_KEY_IDX)
+        radio_tune_step_up();
+}
+
+// Read station from NVRAM
+void radio_menu_memory_presed(uint8_t index)
+{
+    uint32_t new_freq_hz = nvram_read_key_memory_freq(index + 1);
+    if ((new_freq_hz < 50e6) || (new_freq_hz > 120e6))
+    {
+        radio_menu_display_warning(index);
+        return;
+    }
+    
+    uint32_t cur_freq_hz = radio_get_current_freq_hz();
+    if (new_freq_hz != cur_freq_hz)
+        radio_set_new_frequency(new_freq_hz);
+}
+
+void radio_menu_display_warning(uint8_t index)
+{
+    char tmp_str[64];
+    uint8_t tmp_index = index + 1;
+    sprintf(tmp_str, "Bad freq. for CH%d!", tmp_index);
+    
+    radio_menu_msg_obj.yes_callback = NULL;
+    radio_menu_msg_obj.no_callback = NULL;
+    START_TIMER(radio_menu_msg_obj.timeout_timer_ms, READ_MEM_MSG_TIMEOUT_MS);
+    
+    display_show_message(tmp_str, NULL, NULL);
+    radio_menu_activate_message();
+}
 
 void radio_menu_front2_pressed(uint8_t index)
 {
