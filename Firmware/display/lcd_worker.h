@@ -42,12 +42,13 @@ uint16_t lcd_draw_utf8_string(char *s, uint16_t x, uint16_t y, uint8_t font_size
 uint16_t lcd_draw_string_cur(char *s, uint8_t font_size, uint8_t flags);
 uint16_t get_font_width(uint8_t font);
 void draw_caption_bar(uint8_t height);
-void display_draw_line(uint16_t y);
 void display_draw_vertical_line(uint16_t x, uint16_t y1, uint16_t y2);
 void display_draw_horizontal_line(uint16_t x1, uint16_t x2, uint16_t y);
 void display_clear_horizontal_line(uint16_t x1, uint16_t x2, uint16_t y);
 void display_draw_rectangle(int x, int y, int width, int height);
 void display_draw_emplty_rectangle(int x, int y, int width, int height);
+void draw_image(uint8_t *image_data, uint16_t x, uint16_t y);
+
 
 void utf8_to_cp1251(uint8_t *in_str, uint8_t *out_str, uint8_t max_out_len, uint16_t len);
 

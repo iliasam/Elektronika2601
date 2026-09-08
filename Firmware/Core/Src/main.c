@@ -28,6 +28,7 @@
 #include "keys_controlling.h"
 #include "radio_adc.h"
 #include "nvram.h"
+#include "radio_menu.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

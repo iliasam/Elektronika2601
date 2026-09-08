@@ -287,17 +287,6 @@ void draw_caption_bar(uint8_t height)
 }
 
 
-//Horizontal line
-void display_draw_line(uint16_t y)
-{
-  uint16_t x_pos;
-  for (x_pos = 0; x_pos <= LCD_RIGHT_OFFSET; x_pos++)
-  {
-    lcd_set_pixel(x_pos, y);
-  }
-}
-
-
 uint16_t get_font_width(uint8_t font)
 {
   switch (font)
@@ -379,6 +368,26 @@ void display_draw_emplty_rectangle(int x, int y, int width, int height)
     }
     
     display_draw_rectangle(x, y, width, height);
+}
+
+//width must divide to 8!!
+void draw_image(uint8_t *image_data, uint16_t x, uint16_t y)
+{
+  uint16_t width = image_data[0] + (uint16_t)image_data[1] * 256;
+  uint16_t height = image_data[2] + (uint16_t)image_data[3] * 256;
+  uint16_t bytes_in_line =  width / 8;
+  
+  for (uint16_t y_pos = 0; y_pos < height; y_pos++) 
+  {
+    for (uint16_t x_pos = 0; x_pos < width; x_pos++)
+    {
+      int32_t byte_offset = y_pos * bytes_in_line + (x_pos / 8) + 4;
+      if (image_data[byte_offset] & (1 << (7 - (x_pos % 8)))) 
+        lcd_set_pixel(x + x_pos, y + y_pos);
+      else
+        lcd_reset_pixel(x + x_pos, y + y_pos);
+    }
+  }
 }
 
 void utf8_to_cp1251(uint8_t *in_str, uint8_t *out_str, uint8_t max_out_len, uint16_t len)

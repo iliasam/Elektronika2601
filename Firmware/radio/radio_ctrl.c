@@ -10,7 +10,8 @@
 #include "radio_adc.h"
 
 #define RADIO_IF_FREQ_HZ        10700000 //10.7MHz
-#define RADIO_TUNE_STEP_HZ      100000 //10kHz
+#define RADIO_TUNE_STEP_100KHZ  100000 //100kHz
+#define RADIO_TUNE_STEP_1MHZ    1000000 //1MHz
 
 /// Duration of frequency measurement
 #define RADIO_FREQ_MEAS_TIMEBASE_US     1000 //1ms
@@ -19,6 +20,8 @@
 
 // Threshold level
 #define RADIO_FREQ_CHECK_THRESHOLD_HZ   2000000 //2MHz
+
+
 
 /// Current radio RX frequency
 uint32_t radio_current_set_freq_hz = 100.0e6;
@@ -34,9 +37,13 @@ bool radio_freq_lock_lost_flag = false;
 //Measured with 1MHz steps
 volatile uint32_t measured_frequency_hz = 0;
 
+radio_tune_mode_t radio_tune_mode = RADIO_TUNE_MODE_100K;
+
 void radio_send_pll_val(uint8_t counter_n, uint8_t counter_a);
 void radio_ctrl_init_timers(void);
 void radio_start_measure_freq(void);
+
+int radio_ctrl_get_closest_station_index(uint32_t frequency_hz);
 
 //https://noginsk-service.ru/page.php?575
 const radio_stations_t radio_stations_array[] = 
@@ -149,6 +156,7 @@ void radio_set_new_frequency(uint32_t new_freq_hz)
     uint32_t mhz_dec = (uint32_t)(new_freq_hz / 100000) % 10;
     
     radio_send_pll_val(mhz_integer, mhz_dec);
+    radio_freq_lock_lost_flag = false;
     
     radio_current_set_station_name = radio_ctrl_get_station_name(radio_current_set_freq_hz);
 }
@@ -266,14 +274,52 @@ bool radio_get_freq_lock_lost_state(void)
 
 void radio_tune_step_up(void)
 {
-    radio_current_set_freq_hz += RADIO_TUNE_STEP_HZ;
+    if (radio_tune_mode == RADIO_TUNE_MODE_100K)
+        radio_current_set_freq_hz += RADIO_TUNE_STEP_100KHZ;
+    else if (radio_tune_mode == RADIO_TUNE_MODE_1M)
+        radio_current_set_freq_hz += RADIO_TUNE_STEP_1MHZ;
+    else if (radio_tune_mode == RADIO_TUNE_MODE_STATIONS)
+    {
+        int index = radio_ctrl_get_closest_station_index(radio_current_set_freq_hz);
+        index++;
+        if (index < radio_stations_count)
+        {
+            radio_set_new_frequency(radio_stations_array[index].frequency_hz);
+            return;
+        }
+    }
     radio_set_new_frequency(radio_current_set_freq_hz);
 }
 
 void radio_tune_step_down(void)
 {
-    radio_current_set_freq_hz -= RADIO_TUNE_STEP_HZ;
+    if (radio_tune_mode == RADIO_TUNE_MODE_100K)
+        radio_current_set_freq_hz -= RADIO_TUNE_STEP_100KHZ;
+    else if (radio_tune_mode == RADIO_TUNE_MODE_1M)
+        radio_current_set_freq_hz -= RADIO_TUNE_STEP_1MHZ;
+    else if (radio_tune_mode == RADIO_TUNE_MODE_STATIONS)
+    {
+        int index = radio_ctrl_get_closest_station_index(radio_current_set_freq_hz);
+        if (index > 0)
+        {
+            index--;
+            radio_set_new_frequency(radio_stations_array[index].frequency_hz);
+            return;
+        }
+    }
     radio_set_new_frequency(radio_current_set_freq_hz);
+}
+
+void radio_tune_switch_mode(void)
+{
+    radio_tune_mode++;
+    if (radio_tune_mode >= RADIO_TUNE_MODE_LAST)
+        radio_tune_mode = RADIO_TUNE_MODE_100K;
+}
+
+radio_tune_mode_t radio_tune_get_mode(void)
+{
+    return radio_tune_mode;
 }
 
 char* radio_ctrl_get_station_name(uint32_t frequency_hz)
@@ -302,6 +348,44 @@ char* radio_ctrl_get_station_name(uint32_t frequency_hz)
 
     // Not found
     return NULL;
+}
+
+int radio_ctrl_get_closest_station_index(uint32_t frequency_hz)
+{
+    size_t left = 0;
+    size_t right = radio_stations_count;
+
+    // Стандартный бинарный поиск (lower bound)
+    while (left < right) 
+    {
+        size_t mid = left + (right - left) / 2;
+        uint32_t mid_freq = radio_stations_array[mid].frequency_hz;
+
+        if (mid_freq < frequency_hz)
+            left = mid + 1;
+        else 
+            right = mid;
+    }
+
+    if (left == 0)
+        return 0;
+    
+    if (left == radio_stations_count)
+    {
+        return (int)(left - 1);
+    }
+
+    uint32_t diff_current = radio_stations_array[left].frequency_hz - frequency_hz;
+    uint32_t diff_previous = frequency_hz - radio_stations_array[left - 1].frequency_hz;
+
+    if (diff_current < diff_previous)
+    {
+        return (int)left;
+    }
+    else
+    {
+        return (int)(left - 1);
+    }
 }
 
 /*

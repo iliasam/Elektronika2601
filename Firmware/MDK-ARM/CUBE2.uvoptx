@@ -183,6 +183,11 @@
           <WinNumber>1</WinNumber>
           <ItemText>nvram_data,0x0A</ItemText>
         </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>radio_current_set_freq_hz,0x0A</ItemText>
+        </Ww>
       </WatchWindow1>
       <Tracepoint>
         <THDelay>0</THDelay>

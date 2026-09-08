@@ -133,9 +133,14 @@ void radio_menu_display_warning(uint8_t index)
     radio_menu_activate_message();
 }
 
+// Marked "1"
 void radio_menu_front2_pressed(uint8_t index)
 {
-    if (radio_menu_mode == RADIO_MENU_MESSAGE)
+    if (radio_menu_mode == RADIO_MENU_MAIN)
+    {
+        radio_tune_switch_mode();
+    }
+    else if (radio_menu_mode == RADIO_MENU_MESSAGE)
     {
         //YES button
         if (radio_menu_msg_obj.yes_callback != NULL)
@@ -144,6 +149,7 @@ void radio_menu_front2_pressed(uint8_t index)
     }
 }
 
+// Marked "3"
 void radio_menu_front4_pressed(uint8_t index)
 {
     if (radio_menu_mode == RADIO_MENU_MESSAGE)

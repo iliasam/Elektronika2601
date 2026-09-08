@@ -6,6 +6,14 @@
 #include "stdbool.h"
 #include "config.h"
 
+typedef enum
+{
+    RADIO_TUNE_MODE_100K = 0,
+    RADIO_TUNE_MODE_1M,
+    RADIO_TUNE_MODE_STATIONS,
+    RADIO_TUNE_MODE_LAST, //not used
+} radio_tune_mode_t;
+
 typedef struct 
 {
     uint32_t frequency_hz;
@@ -24,6 +32,8 @@ void radio_set_new_frequency(uint32_t new_freq_hz);
 
 void radio_tune_step_up(void);
 void radio_tune_step_down(void);
+void radio_tune_switch_mode(void);
+radio_tune_mode_t radio_tune_get_mode(void);
 
 char* radio_ctrl_get_station_name(uint32_t frequency_hz);
 char *radio_get_current_set_station_name(void);
