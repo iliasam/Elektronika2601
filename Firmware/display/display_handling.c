@@ -11,11 +11,45 @@
 #include "radio_adc.h"
 #include "main.h"
 
+typedef struct
+{
+    bool is_active;
+} display_msg_t;
+
+display_msg_t display_msg_obj = {0};
+
 void display_handling_draw_big_freq(uint8_t x, uint8_t y, uint32_t freq_value_hz);
 void display_backlight_init(void);
 void display_handling_draw_keys_test(void);
 
 void display_handling_draw_main_menu(void);
+
+// ***********************************************
+
+void display_show_message(char *text, char *text_yes, char *text_no)
+{
+    display_msg_obj.is_active = true;
+    
+    lcd_clear_framebuffer();
+    
+    const uint32_t frame_height = 32-7;
+    const uint32_t frame_width = 128 - 6;
+    display_draw_emplty_rectangle(3, 4, frame_width, frame_height);
+    display_draw_horizontal_line(4, 4 + frame_width, 4 + frame_height);
+    display_draw_vertical_line(4 + frame_width, 4 + 1, 4 + frame_height);
+    
+    lcd_draw_utf8_string(text, 7, 7, FONT_SIZE_8, 0);
+    
+    lcd_draw_utf8_string(text_yes, 53, 21, FONT_SIZE_6, LCD_CENTER_X_FLAG);
+    lcd_draw_utf8_string(text_no, 110, 21, FONT_SIZE_6, LCD_CENTER_X_FLAG);
+    
+    lcd_update();
+}
+
+void display_close_message(void)
+{
+    display_msg_obj.is_active = false;
+}
 
 void display_handling_init(void)
 {
@@ -40,7 +74,8 @@ void display_handling_init(void)
 
 void display_handling_update(void)
 {
-    char tmp_str[16];
+    if (display_msg_obj.is_active)
+        return;
     
     display_handling_draw_main_menu();
 }

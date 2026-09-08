@@ -27,6 +27,7 @@
 
 #define LCD_NEW_LINE_FLAG       1//jump to new line
 #define LCD_INVERTED_FLAG       2//inverted draw
+#define LCD_CENTER_X_FLAG       4
 
 void lcd_full_clear(void);
 void lcd_clear_framebuffer(void);
@@ -43,6 +44,10 @@ uint16_t get_font_width(uint8_t font);
 void draw_caption_bar(uint8_t height);
 void display_draw_line(uint16_t y);
 void display_draw_vertical_line(uint16_t x, uint16_t y1, uint16_t y2);
+void display_draw_horizontal_line(uint16_t x1, uint16_t x2, uint16_t y);
+void display_clear_horizontal_line(uint16_t x1, uint16_t x2, uint16_t y);
+void display_draw_rectangle(int x, int y, int width, int height);
+void display_draw_emplty_rectangle(int x, int y, int width, int height);
 
 void utf8_to_cp1251(uint8_t *in_str, uint8_t *out_str, uint8_t max_out_len, uint16_t len);
 

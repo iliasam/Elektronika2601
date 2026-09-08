@@ -455,6 +455,11 @@
               <FileType>1</FileType>
               <FilePath>..\radio\radio_adc.c</FilePath>
             </File>
+            <File>
+              <FileName>radio_menu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\radio\radio_menu.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

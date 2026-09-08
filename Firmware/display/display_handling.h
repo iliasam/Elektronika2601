@@ -12,5 +12,8 @@ void display_handling_update(void);
 
 void display_backlight_switch(bool new_state);
 
+void display_show_message(char *text, char *text_yes, char *text_no);
+void display_close_message(void);
+
 #endif
 

@@ -5,6 +5,7 @@
 #include "string.h"
 #include "radio_ctrl.h"
 #include "display_handling.h"
+#include "radio_menu.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -38,7 +39,6 @@ uint8_t keys_startup_lock_flag = 1;
 extern volatile uint32_t ms_tick;
 
 /* Private function prototypes -----------------------------------------------*/
-void keys_tune_pressed(uint8_t index);
 void keys_backlight_pressed(uint8_t index);
 
 /* Private functions ---------------------------------------------------------*/
@@ -47,32 +47,39 @@ void keys_init(void)
 {
     key_items[0].pin_name  =    BUTTON_MEM1_PIN;
     key_items[0].gpio_name =    BUTTON_MEM1_PORT;
+    key_items[0].hold_event_callback = radio_menu_memory_hold;
     
     key_items[1].pin_name  =    BUTTON_MEM2_PIN;
     key_items[1].gpio_name =    BUTTON_MEM2_PORT;
+    key_items[1].hold_event_callback = radio_menu_memory_hold;
     
     key_items[2].pin_name  =    BUTTON_MEM3_PIN;
     key_items[2].gpio_name =    BUTTON_MEM3_PORT;
+    key_items[2].hold_event_callback = radio_menu_memory_hold;
 
     key_items[3].pin_name  =    BUTTON_MEM4_PIN;
     key_items[3].gpio_name =    BUTTON_MEM4_PORT;
+    key_items[3].hold_event_callback = radio_menu_memory_hold;
 
     key_items[4].pin_name  =    BUTTON_MEM5_PIN;
     key_items[4].gpio_name =    BUTTON_MEM5_PORT;
+    key_items[4].hold_event_callback = radio_menu_memory_hold;
 
     key_items[5].pin_name  =    BUTTON_MEM6_PIN;
     key_items[5].gpio_name =    BUTTON_MEM6_PORT;
+    key_items[5].hold_event_callback = radio_menu_memory_hold;
 
     key_items[6].pin_name  =    BUTTON_MEM7_PIN;
     key_items[6].gpio_name =    BUTTON_MEM7_PORT;
+    key_items[6].hold_event_callback = radio_menu_memory_hold;
 
     key_items[7].pin_name  =    BUTTON_TUNE_LOW_PIN;
     key_items[7].gpio_name =    BUTTON_TUNE_LOW_PORT;
-    key_items[7].pressed_event_callback = keys_tune_pressed;
+    key_items[7].pressed_event_callback = radio_menu_tune_pressed;
     
     key_items[8].pin_name  =    BUTTON_TUNE_HIGH_PIN;
     key_items[8].gpio_name =    BUTTON_TUNE_HIGH_PORT;
-    key_items[8].pressed_event_callback = keys_tune_pressed;
+    key_items[8].pressed_event_callback = radio_menu_tune_pressed;
     
     key_items[9].pin_name   =   BUTTON_FRONT1_PIN;
     key_items[9].gpio_name  =   BUTTON_FRONT1_PORT;
@@ -80,12 +87,14 @@ void keys_init(void)
 
     key_items[10].pin_name  =   BUTTON_FRONT2_PIN;
     key_items[10].gpio_name =   BUTTON_FRONT2_PORT;
+    key_items[10].pressed_event_callback = radio_menu_front2_pressed;
 
     key_items[11].pin_name  =   BUTTON_FRONT3_PIN;
     key_items[11].gpio_name =   BUTTON_FRONT3_PORT;
 
     key_items[12].pin_name  =   BUTTON_FRONT4_PIN;
-    key_items[12].gpio_name =   BUTTON_FRONT4_PORT;  
+    key_items[12].gpio_name =   BUTTON_FRONT4_PORT;
+    key_items[12].pressed_event_callback = radio_menu_front4_pressed;
     
     
     for (int i = 0; i < BUTTONS_COUNT; i++)
@@ -182,8 +191,6 @@ void keys_functons_update_key_state(key_item_t* key_item)
       if (key_item->current_state != 0)
       {
           key_item->state = KEY_PRESSED;
-          if (key_item->pressed_event_callback != NULL)
-              key_item->pressed_event_callback(key_item->key_index);
       }
       else
         key_item->state = KEY_RELEASED;
@@ -196,6 +203,12 @@ void keys_functons_update_key_state(key_item_t* key_item)
     // key not pressed
     if (key_item->current_state == 0)
     {
+      if (key_item->state == KEY_PRESSED)
+      {
+        if (key_item->pressed_event_callback != NULL)
+            key_item->pressed_event_callback(key_item->key_index);
+      }
+
       key_item->state = KEY_WAIT_FOR_RELEASE;// key is locked here
       key_item->key_timestamp = ms_tick;
       return;
@@ -219,6 +232,9 @@ void keys_functons_update_key_state(key_item_t* key_item)
     if (delta_time > KEY_HOLD_TIME)
     {
       key_item->state = KEY_HOLD;
+
+      if (key_item->hold_event_callback != NULL)
+        key_item->hold_event_callback(key_item->key_index);
       return;
     }
   }
@@ -235,14 +251,6 @@ int keys_get_current_state(int index)
 
 // *************************************************
 
-void keys_tune_pressed(uint8_t index)
-{
-    if (index == 7)
-        radio_tune_step_down();
-    else if (index == 8)
-        radio_tune_step_up();
-}
-
 void keys_backlight_pressed(uint8_t index)
 {
     static bool backlight_state = true;
@@ -250,3 +258,4 @@ void keys_backlight_pressed(uint8_t index)
     backlight_state = !backlight_state;
     display_backlight_switch(backlight_state);
 }
+

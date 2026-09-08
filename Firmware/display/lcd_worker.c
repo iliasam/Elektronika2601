@@ -71,20 +71,30 @@ void lcd_update(void)
 //String end is 0x00 char
 uint16_t lcd_draw_string(char *s, uint16_t x, uint16_t y, uint8_t font_size, uint8_t flags)
 {
-  uint16_t width = get_font_width(font_size);
+  uint16_t font_width = get_font_width(font_size);
   uint8_t chr_pos = 0;
   char chr = *s;
+    
+  if (flags & LCD_CENTER_X_FLAG)
+  {
+    uint8_t length =  strlen(s);
+    uint16_t str_width = length * font_width;
+    int16_t start_x = (int16_t)x - (str_width / 2);
+    if (start_x < 0)
+      start_x = 0;
+    x = (uint16_t)start_x;
+  }
   
   while (chr && (chr_pos < 50)) 
   {
-    lcd_draw_char(chr, x + chr_pos*width, y, font_size, flags);
+    lcd_draw_char(chr, x + chr_pos * font_width, y, font_size, flags);
     chr_pos++;
     chr = s[chr_pos];
   }
-  lcd_cursor_text_x = x + chr_pos*width;
+  lcd_cursor_text_x = x + chr_pos * font_width;
   lcd_cursor_text_y = y;
   
-  return chr_pos*width;
+  return chr_pos * font_width;
 }
 
 uint16_t lcd_draw_utf8_string(char *s, uint16_t x, uint16_t y, uint8_t font_size, uint8_t flags)
@@ -314,6 +324,61 @@ void display_draw_vertical_line(uint16_t x, uint16_t y1, uint16_t y2)
   {
     lcd_set_pixel(x, y);
   }
+}
+
+void display_draw_horizontal_line(uint16_t x1, uint16_t x2, uint16_t y)
+{
+  if (x1 > x2)
+  {
+    uint16_t tmp = x1;
+    x1 = x2;
+    x2 = tmp;
+  }
+  
+  for (uint16_t x = x1; x <= x2; x++)
+  {
+    lcd_set_pixel(x, y);
+  }
+}
+
+void display_clear_horizontal_line(uint16_t x1, uint16_t x2, uint16_t y)
+{
+  if (x1 > x2)
+  {
+    uint16_t tmp = x1;
+    x1 = x2;
+    x2 = tmp;
+  }
+  
+  for (uint16_t x = x1; x <= x2; x++)
+  {
+    lcd_reset_pixel(x, y);
+  }
+}
+
+void display_draw_rectangle(int x, int y, int width, int height) 
+{
+    //Top 
+    display_draw_horizontal_line(x, x + width - 1, y);
+
+    // Bottom
+    display_draw_horizontal_line(x, x + width, y + height - 1);
+
+    // Left 
+    display_draw_vertical_line(x, y, y + height - 1);
+
+    // Right
+    display_draw_vertical_line(x + width, y, y + height - 1);
+}
+
+void display_draw_emplty_rectangle(int x, int y, int width, int height) 
+{
+    for (uint32_t cur_y = y; cur_y < (y+height); cur_y++)
+    {
+        display_clear_horizontal_line(x, x + width, cur_y);
+    }
+    
+    display_draw_rectangle(x, y, width, height);
 }
 
 void utf8_to_cp1251(uint8_t *in_str, uint8_t *out_str, uint8_t max_out_len, uint16_t len)
