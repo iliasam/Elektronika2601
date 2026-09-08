@@ -43,6 +43,9 @@
 
 // **************************
 
+/// Number of memory buttons
+#define MEM_BUTTONS_CNT         7
+
 #define BUTTON_MEM1_PIN 	    LL_GPIO_PIN_7//pb7
 #define BUTTON_MEM1_PORT 	    GPIOB
 

@@ -3,6 +3,7 @@
 #include "display_handling.h"
 #include "stdio.h"
 #include "config.h"
+#include "nvram.h"
 
 #define TUNE_DOWN_KEY_IDX   7
 #define TUNE_UP_KEY_IDX     8
@@ -24,6 +25,9 @@ radio_menu_msg_t radio_menu_msg_obj = {0};
 
 radio_menu_mode_t radio_menu_mode = RADIO_MENU_MAIN;
 
+/// Temporary value, used fo saving index of the pressed memory button, starts from 1
+uint8_t radio_menu_mem_saving_index = 0;
+
 
 void radio_menu_activate_message(void);
 void radio_menu_close_message(void);
@@ -40,13 +44,23 @@ void radio_menu_tune_pressed(uint8_t index)
         radio_tune_step_up();
 }
 
+void radio_menu_memory_presed(uint8_t index)
+{
+    uint32_t new_freq_hz = nvram_read_key_memory_freq(index + 1);
+    if (new_freq_hz == 0)
+    {
+        return;
+    }
+    radio_set_new_frequency(new_freq_hz);
+}
+
 /// Called from keys event callback
 void radio_menu_memory_hold(uint8_t index)
 {
     char tmp_str[64];
-    uint8_t mem_channel = index + 1;
+    radio_menu_mem_saving_index = index + 1;
     float freq_mgz = (float)radio_get_current_freq_hz() / 1000000.0f;
-    sprintf(tmp_str, "SAVE %.1f > CH%d?", freq_mgz, mem_channel);
+    sprintf(tmp_str, "SAVE %.1f > CH%d?", freq_mgz, radio_menu_mem_saving_index);
     
     radio_menu_msg_obj.yes_callback = radio_menu_save_memory_yes;
     radio_menu_msg_obj.no_callback = NULL;
@@ -58,7 +72,7 @@ void radio_menu_memory_hold(uint8_t index)
 /// Called when button YES is pressed in Save To MEM menu
 void radio_menu_save_memory_yes(void)
 {
-
+    nvram_save_key_memory_freq(radio_get_current_freq_hz(), radio_menu_mem_saving_index);
 }
 
 void radio_menu_activate_message(void)

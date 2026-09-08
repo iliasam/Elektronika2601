@@ -48,30 +48,37 @@ void keys_init(void)
     key_items[0].pin_name  =    BUTTON_MEM1_PIN;
     key_items[0].gpio_name =    BUTTON_MEM1_PORT;
     key_items[0].hold_event_callback = radio_menu_memory_hold;
+    key_items[0].pressed_event_callback = radio_menu_memory_presed;
     
     key_items[1].pin_name  =    BUTTON_MEM2_PIN;
     key_items[1].gpio_name =    BUTTON_MEM2_PORT;
     key_items[1].hold_event_callback = radio_menu_memory_hold;
+    key_items[1].pressed_event_callback = radio_menu_memory_presed;
     
     key_items[2].pin_name  =    BUTTON_MEM3_PIN;
     key_items[2].gpio_name =    BUTTON_MEM3_PORT;
     key_items[2].hold_event_callback = radio_menu_memory_hold;
+    key_items[2].pressed_event_callback = radio_menu_memory_presed;
 
     key_items[3].pin_name  =    BUTTON_MEM4_PIN;
     key_items[3].gpio_name =    BUTTON_MEM4_PORT;
     key_items[3].hold_event_callback = radio_menu_memory_hold;
+    key_items[3].pressed_event_callback = radio_menu_memory_presed;
 
     key_items[4].pin_name  =    BUTTON_MEM5_PIN;
     key_items[4].gpio_name =    BUTTON_MEM5_PORT;
     key_items[4].hold_event_callback = radio_menu_memory_hold;
+    key_items[4].pressed_event_callback = radio_menu_memory_presed;
 
     key_items[5].pin_name  =    BUTTON_MEM6_PIN;
     key_items[5].gpio_name =    BUTTON_MEM6_PORT;
     key_items[5].hold_event_callback = radio_menu_memory_hold;
+    key_items[5].pressed_event_callback = radio_menu_memory_presed;
 
     key_items[6].pin_name  =    BUTTON_MEM7_PIN;
     key_items[6].gpio_name =    BUTTON_MEM7_PORT;
     key_items[6].hold_event_callback = radio_menu_memory_hold;
+    key_items[6].pressed_event_callback = radio_menu_memory_presed;
 
     key_items[7].pin_name  =    BUTTON_TUNE_LOW_PIN;
     key_items[7].gpio_name =    BUTTON_TUNE_LOW_PORT;

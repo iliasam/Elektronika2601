@@ -336,7 +336,7 @@
               <MiscControls></MiscControls>
               <Define>USE_FULL_LL_DRIVER,HSE_VALUE=8000000,HSE_STARTUP_TIMEOUT=100,LSE_STARTUP_TIMEOUT=5000,LSE_VALUE=32768,EXTERNAL_CLOCK_VALUE=8000000,HSI_VALUE=8000000,LSI_VALUE=40000,VDD_VALUE=3300,PREFETCH_ENABLE=1,STM32F303xC</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F3xx_HAL_Driver/Inc;../Drivers/CMSIS/Device/ST/STM32F3xx/Include;../Drivers/CMSIS/Include;..\display;..\radio</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F3xx_HAL_Driver/Inc;../Drivers/CMSIS/Device/ST/STM32F3xx/Include;../Drivers/CMSIS/Include;..\display;..\radio;..\nvram</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -459,6 +459,21 @@
               <FileName>radio_menu.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\radio\radio_menu.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/NVRAM</GroupName>
+          <Files>
+            <File>
+              <FileName>nvram.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\nvram\nvram.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f3_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\nvram\stm32f3_flash.c</FilePath>
             </File>
           </Files>
         </Group>

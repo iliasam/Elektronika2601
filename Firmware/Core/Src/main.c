@@ -27,6 +27,7 @@
 #include "radio_ctrl.h"
 #include "keys_controlling.h"
 #include "radio_adc.h"
+#include "nvram.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -109,6 +110,7 @@ int main(void)
   display_handling_init();
   power_ctrl_init();
   radio_ctrl_init();
+  nvram_read_data();
 
   keys_init();
   LL_COMP_Enable(COMP2);
