@@ -35,7 +35,7 @@ bool radio_freq_measurement_running = false;
 bool radio_freq_lock_lost_flag = false;
 
 //Measured with 1MHz steps
-volatile uint32_t measured_frequency_hz = 0;
+volatile uint32_t radio_measured_frequency_hz = 0;
 
 radio_tune_mode_t radio_tune_mode = RADIO_TUNE_MODE_100K;
 
@@ -136,11 +136,11 @@ void radio_ctrl_handling(void)
         if ((LL_TIM_IsEnabledCounter(RADIO_MASTER_TIM)) == false)
         {
             uint32_t pulses = LL_TIM_OC_GetCompareCH1(RADIO_COUNTING_TIM); 
-            measured_frequency_hz = pulses * 1000 * 40 - RADIO_IF_FREQ_HZ;
+            radio_measured_frequency_hz = pulses * 1000 * 40 - RADIO_IF_FREQ_HZ;
             radio_freq_measurement_running = false;
             radio_last_freq_meas_timestamp_ms = ms_tick;
             
-            uint32_t freq_diff_hz = abs(measured_frequency_hz - radio_current_set_freq_hz);
+            uint32_t freq_diff_hz = abs(radio_measured_frequency_hz - radio_current_set_freq_hz);
             radio_freq_lock_lost_flag = 
                 (freq_diff_hz > RADIO_FREQ_CHECK_THRESHOLD_HZ) ? true : false;
         }
@@ -199,6 +199,7 @@ void radio_send_pll_val(uint8_t counter_n, uint8_t counter_a)
     }
 }
 
+// Init timers for frequency measurement
 void radio_ctrl_init_timers(void)
 {
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
@@ -257,6 +258,7 @@ void radio_start_measure_freq(void)
     radio_freq_measurement_running = true;
 }
 
+/// Get RX frequeny in Hz, that was set
 uint32_t radio_get_current_freq_hz(void)
 {
     return radio_current_set_freq_hz;
@@ -350,12 +352,13 @@ char* radio_ctrl_get_station_name(uint32_t frequency_hz)
     return NULL;
 }
 
+// Return index of he station from radio_stations_array[]
 int radio_ctrl_get_closest_station_index(uint32_t frequency_hz)
 {
     size_t left = 0;
     size_t right = radio_stations_count;
 
-    // Стандартный бинарный поиск (lower bound)
+    // Binary search (lower bound)
     while (left < right) 
     {
         size_t mid = left + (right - left) / 2;

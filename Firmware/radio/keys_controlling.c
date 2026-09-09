@@ -10,13 +10,15 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 //Time in ms
-#define KEY_HOLD_TIME            900
+#define KEY_HOLD_TIME           900
+
+#define KEY_HOLD_REPEAT_TIME    400
 
 //Time in ms
-#define KEY_PRESSED_TIME         50
+#define KEY_PRESSED_TIME        50
 
 //Time in ms
-#define KEY_RELEASE_TIME         50
+#define KEY_RELEASE_TIME        50
 
 //Time in ms
 #define KEYS_STARTUP_DELAY      500
@@ -39,7 +41,7 @@ uint8_t keys_startup_lock_flag = 1;
 extern volatile uint32_t ms_tick;
 
 /* Private function prototypes -----------------------------------------------*/
-void keys_backlight_pressed(uint8_t index);
+
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -83,14 +85,16 @@ void keys_init(void)
     key_items[7].pin_name  =    BUTTON_TUNE_LOW_PIN;
     key_items[7].gpio_name =    BUTTON_TUNE_LOW_PORT;
     key_items[7].pressed_event_callback = radio_menu_tune_pressed;
+    key_items[7].repeat_flag = 1;
     
     key_items[8].pin_name  =    BUTTON_TUNE_HIGH_PIN;
     key_items[8].gpio_name =    BUTTON_TUNE_HIGH_PORT;
     key_items[8].pressed_event_callback = radio_menu_tune_pressed;
+    key_items[8].repeat_flag = 1;
     
     key_items[9].pin_name   =   BUTTON_FRONT1_PIN;
     key_items[9].gpio_name  =   BUTTON_FRONT1_PORT;
-    key_items[9].pressed_event_callback = keys_backlight_pressed;
+    key_items[9].pressed_event_callback = radio_menu_front1_pressed;
 
     key_items[10].pin_name  =   BUTTON_FRONT2_PIN;
     key_items[10].gpio_name =   BUTTON_FRONT2_PORT;
@@ -128,29 +132,6 @@ void key_handling(void)
     {
         keys_startup_lock_flag = 0;
     }
-    
-    /*
-  
-  if ((key_down.prev_state == KEY_PRESSED) && 
-      (key_down.state == KEY_WAIT_FOR_RELEASE))
-  {
-
-  }
-  
-  if ((key_up.prev_state == KEY_PRESSED) && 
-      (key_up.state == KEY_WAIT_FOR_RELEASE))
-  {
-
-  }
-  
-  if ((key_up.prev_state == KEY_PRESSED) && 
-      (key_up.state == KEY_HOLD))
-  {
-
-  }
-  
-  */
-
 }
 
 //*****************************************************************************
@@ -186,19 +167,17 @@ void keys_functons_update_key_state(key_item_t* key_item)
   {
     //key presed now
     key_item->state = KEY_PRESSED_WAIT;
-    key_item->key_timestamp = ms_tick;
+    key_item->key_timestamp_ms = ms_tick;
     return;
   }
   
   if (key_item->state == KEY_PRESSED_WAIT)
   {
-    uint32_t delta_time = ms_tick - key_item->key_timestamp;
+    uint32_t delta_time = ms_tick - key_item->key_timestamp_ms;
     if (delta_time > KEY_PRESSED_TIME)
     {
       if (key_item->current_state != 0)
-      {
           key_item->state = KEY_PRESSED;
-      }
       else
         key_item->state = KEY_RELEASED;
     }
@@ -210,21 +189,21 @@ void keys_functons_update_key_state(key_item_t* key_item)
     // key not pressed
     if (key_item->current_state == 0)
     {
-      if (key_item->state == KEY_PRESSED)
+      if (key_item->state == KEY_PRESSED) //not for hold
       {
         if (key_item->pressed_event_callback != NULL)
             key_item->pressed_event_callback(key_item->key_index);
       }
 
       key_item->state = KEY_WAIT_FOR_RELEASE;// key is locked here
-      key_item->key_timestamp = ms_tick;
+      key_item->key_timestamp_ms = ms_tick;
       return;
     }
   }
   
   if (key_item->state == KEY_WAIT_FOR_RELEASE)
   {
-    uint32_t delta_time = ms_tick - key_item->key_timestamp;
+    uint32_t delta_time = ms_tick - key_item->key_timestamp_ms;
     if (delta_time > KEY_RELEASE_TIME)
     {
       key_item->state = KEY_RELEASED;
@@ -235,14 +214,27 @@ void keys_functons_update_key_state(key_item_t* key_item)
   if ((key_item->state == KEY_PRESSED) && (key_item->current_state != 0))
   {
     //key still presed now
-    uint32_t delta_time = ms_tick - key_item->key_timestamp;
-    if (delta_time > KEY_HOLD_TIME)
+    uint32_t diff_time = ms_tick - key_item->key_timestamp_ms;
+    if (diff_time > KEY_HOLD_TIME)
     {
       key_item->state = KEY_HOLD;
+      key_item->repeat_timestamp_ms = ms_tick;
 
       if (key_item->hold_event_callback != NULL)
         key_item->hold_event_callback(key_item->key_index);
       return;
+    }
+  }
+  
+  if ((key_item->state == KEY_HOLD) && 
+      (key_item->current_state != 0) && 
+      (key_item->repeat_flag != 0))
+  {
+    uint32_t diff_time = ms_tick - key_item->repeat_timestamp_ms;
+    if (diff_time > KEY_HOLD_REPEAT_TIME)
+    {
+        if (key_item->pressed_event_callback != NULL)
+            key_item->pressed_event_callback(key_item->key_index);
     }
   }
 }
@@ -256,13 +248,5 @@ int keys_get_current_state(int index)
     return (int)key_items[index].current_state;
 }
 
-// *************************************************
 
-void keys_backlight_pressed(uint8_t index)
-{
-    static bool backlight_state = true;
-    
-    backlight_state = !backlight_state;
-    display_backlight_switch(backlight_state);
-}
 

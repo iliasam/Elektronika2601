@@ -161,3 +161,12 @@ void radio_menu_front4_pressed(uint8_t index)
     }
 }
 
+// Marked "LAMP"
+void radio_menu_front1_pressed(uint8_t index)
+{
+    static bool backlight_state = true;
+    
+    backlight_state = !backlight_state;
+    display_backlight_switch(backlight_state);
+}
+

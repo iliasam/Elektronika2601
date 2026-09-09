@@ -35,13 +35,18 @@ typedef struct
   key_state_t prev_state;
   
   //Timestamp of pressed or released time
-  uint32_t key_timestamp;
+  uint32_t key_timestamp_ms;
+    
+  uint32_t repeat_timestamp_ms;
     
   uint8_t key_index;
     
   void (*pressed_event_callback)(uint8_t key_index);
     
   void (*hold_event_callback)(uint8_t key_index);
+  
+  /// Key will generate events in hold
+  uint8_t repeat_flag;
   
 } key_item_t;
 

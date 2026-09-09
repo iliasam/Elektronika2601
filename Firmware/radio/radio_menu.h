@@ -12,6 +12,7 @@ void radio_menu_tune_pressed(uint8_t index);
 void radio_menu_memory_hold(uint8_t index);
 void radio_menu_memory_presed(uint8_t index);
 
+void radio_menu_front1_pressed(uint8_t index);
 void radio_menu_front2_pressed(uint8_t index);
 void radio_menu_front4_pressed(uint8_t index);
 
